@@ -1,54 +1,42 @@
 package org.example.lab2;
 
-import javax.crypto.*;
-import java.security.InvalidKeyException;
-import java.security.Key;
-import java.security.NoSuchAlgorithmException;
+import org.apache.commons.codec.binary.Hex;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
 
 public class Cryptor {
-    private static String algorithm = "DESede";
-    private static Key    key;
-    private static Cipher cipher;
+    private static final String SUPER_SECRET_KEY = "B374A26A71490437AA024E4FADD5B497FDFF1A8EA6FF12F6FB65AF2720B59CCF";
 
-    static {
-        //init key
+    public static byte[] decrypt(byte[] strToDecrypt) {
         try {
-            key = KeyGenerator.getInstance(algorithm).generateKey();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
+            byte[] iv = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+            IvParameterSpec ivspec = new IvParameterSpec(iv);
 
-        //init cipher
-        try {
-            cipher = Cipher.getInstance(algorithm);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (NoSuchPaddingException e) {
-            e.printStackTrace();
+            final SecretKeySpec keySpec = new SecretKeySpec(Hex.decodeHex(SUPER_SECRET_KEY), "AES");
+            Cipher cipher = Cipher.getInstance("AES/CTR/NoPadding");
+            cipher.init(Cipher.DECRYPT_MODE, keySpec, ivspec);
+            return cipher.doFinal(strToDecrypt);
+        } catch (Exception e) {
+            System.out.println("Error while decrypting: " + e.toString());
         }
+        return null;
     }
-
-    public synchronized static byte[] decryptMessage(final byte[] message) throws BadPaddingException, IllegalBlockSizeException {
+    public static byte[] encrypt(byte[] strToEncrypt) {
         try {
-            cipher.init(Cipher.DECRYPT_MODE, key);
+            byte[] iv = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+            IvParameterSpec ivspec = new IvParameterSpec(iv);
 
-        } catch (InvalidKeyException e) {
-            e.printStackTrace();
+            final SecretKeySpec keySpec = new SecretKeySpec(Hex.decodeHex(SUPER_SECRET_KEY), "AES");
+            Cipher cipher = Cipher.getInstance("AES/CTR/NoPadding");
+            cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivspec);
+            return cipher.doFinal(strToEncrypt);
+        } catch (Exception e) {
+            System.out.println("Error while encrypting: " + e.toString());
         }
-
-        return cipher.doFinal(message);
+        return null;
     }
-
-    public synchronized static byte[] encryptMessage(final byte[] message) throws BadPaddingException, IllegalBlockSizeException {
-        try {
-            cipher.init(Cipher.ENCRYPT_MODE, key);
-
-        } catch (InvalidKeyException e) {
-            e.printStackTrace();
-        }
-
-        return cipher.doFinal(message);
-    }
-
 
 }

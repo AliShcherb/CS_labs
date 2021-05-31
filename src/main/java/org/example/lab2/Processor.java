@@ -4,71 +4,46 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 
 
-public class Processor /*extends Thread*/ {
-
-//    Packet inputPacket;
-//
-//    public Processor(Packet inputPacket) {
-//        this.inputPacket = inputPacket;
-//    }
+public class Processor {
 
 
-    public static Packet process(Packet inputPacket) /*throws Exception*/throws BadPaddingException, IllegalBlockSizeException {
+    public static Packet process(Packet inputPacket) throws BadPaddingException, IllegalBlockSizeException {
 
         Message message = inputPacket.getBMsq();
-        Message answerMessage = null;
-        String answer;
+        Message answer;
 
-//        System.out.println("processing");
+             //GET_QUANTITY_OF_PRODUCTS_IN_STOCK
+        if (message.getCType() == Message.cTypes.GET_QUANTITY_OF_PRODUCTS_IN_STOCK.ordinal()) {
+            answer = new Message(Message.cTypes.GET_QUANTITY_OF_PRODUCTS_IN_STOCK, 0, message.getPayload() + "GET_QUANTITY_OF_PRODUCTS_IN_STOCK");
 
-        if (message.getCType() == Message.cTypes.ADD_PRODUCT.ordinal()) {
-            answer = message.getPayload() + " ADD_PRODUCT!";
-            answerMessage = new Message(Message.cTypes.ADD_PRODUCT, 0, answer);
+            //DELETE_QUANTITY_OF_PRODUCTS_IN_STOCK
+        } else if (message.getCType() == Message.cTypes.DELETE_QUANTITY_OF_PRODUCTS_IN_STOCK.ordinal()) {
+            answer = new Message(Message.cTypes.DELETE_QUANTITY_OF_PRODUCTS_IN_STOCK, 0, message.getPayload() + "DELETE_QUANTITY_OF_PRODUCTS_IN_STOCK");
 
-        } else if (message.getCType() == Message.cTypes.ADD_PRODUCT_GROUP.ordinal()) {
-            answer = message.getPayload() + " ADD_PRODUCT_GROUP!";
-            answerMessage = new Message(Message.cTypes.ADD_PRODUCT_GROUP, 0, answer);
+            //ADD_QUANTITY_OF_PRODUCTS_IN_STOCK
+        } else if (message.getCType() == Message.cTypes.ADD_QUANTITY_OF_PRODUCTS_IN_STOCK.ordinal()) {
+            answer = new Message(Message.cTypes.ADD_QUANTITY_OF_PRODUCTS_IN_STOCK, 0, message.getPayload() + "ADD_QUANTITY_OF_PRODUCTS_IN_STOCK");
+
+            //ADD_GROUP_OF_PRODUCTS
+        } else if (message.getCType() == Message.cTypes.ADD_GROUP_OF_PRODUCTS.ordinal()) {
+            answer = new Message(Message.cTypes.ADD_GROUP_OF_PRODUCTS, 0, message.getPayload() + "ADD_GROUP_OF_PRODUCTS");
+
+            //ADD_PRODUCT_NAME_TO_GROUP
+        } else if (message.getCType() == Message.cTypes.ADD_PRODUCT_NAME_TO_GROUP.ordinal()) {
+            answer = new Message(Message.cTypes.ADD_PRODUCT_NAME_TO_GROUP, 0, message.getPayload() + "ADD_PRODUCT_NAME_TO_GROUP");
+
+            //SET_PRICE_OF_PRODUCT
+        } else if (message.getCType() == Message.cTypes.SET_PRICE_OF_PRODUCT.ordinal()) {
+            answer = new Message(Message.cTypes.SET_PRICE_OF_PRODUCT, 0, message.getPayload() + "SET_PRICE_OF_PRODUCT");
+
+            //STANDART_ANSWER
         } else {
-            answer = message.getPayload() + " OK!";
-            answerMessage = new Message(Message.cTypes.OK, 0, answer);
+            answer = new Message(Message.cTypes.STANDART_ANSWER, 0, message.getPayload() + "JUST OK");
         }
 
-        Packet answerPacket = new Packet(inputPacket.bSrc, inputPacket.bPktId, answerMessage);
-//        System.out.println("end processing");
+        Packet answerPacket = new Packet(inputPacket.bSrc, inputPacket.bPktId, answer);
         return answerPacket;
     }
 
-//    @Override
-//    public void run() {
-//        try {
-//            process(inputPacket);
-//        } catch (BadPaddingException e) {
-//            e.printStackTrace();
-//        } catch (IllegalBlockSizeException e) {
-//            e.printStackTrace();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
 
-//    public static void main(String[] args) throws Exception {
-//        //todo packet transmitted through network -->
-//        Message mes = new Message(1, 1, "Josh");
-//        Packet pac = new Packet((byte) 2, UnsignedLong.ONE, mes);
-
-    //Message mes2 = new Message(2,1,"Tom");
-    //Packet pac2 = new Packet((byte)2, UnsignedLong.ONE, mes2);
-
-    //todo this block runs in ClientHandler:
-    //todo incoming byte array -->
-
-//        Packet newPac = new Packet(pac.toPacket());
-    //Packet newPac2 = new Packet(pac2.toPacket());
-
-//        Processor pr = new Processor(newPac);
-    //Processor pr2 = new Processor(newPac2.getBMsq());
-
-//        pr.join();
-    //pr2.join();
-//    }
 }

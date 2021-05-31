@@ -6,24 +6,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.*;
+import java.util.Arrays;
 import java.util.concurrent.*;
 
-public class ClientHandler implements Runnable {
+public class ClientProcessor implements Runnable {
 
-    private Socket       clientSocket;
+    private Socket clientSocket;
     private OutputStream outputStream;
-    private InputStream  inputStream;
-
+    private InputStream inputStream;
     private Network network;
+    private ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
 
-    private ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
 
-
-    public ClientHandler(Socket clientSocket, int maxTimeout, TimeUnit timeUnit) throws IOException {
-        this.clientSocket = clientSocket;
-        inputStream = clientSocket.getInputStream();
-        outputStream = clientSocket.getOutputStream();
+    public ClientProcessor(Socket socket, int maxTimeout, TimeUnit timeUnit) throws IOException {
+        this.clientSocket = socket;
+        inputStream = socket.getInputStream();
+        outputStream = socket.getOutputStream();
 
         network = new Network(inputStream, outputStream, maxTimeout, timeUnit);
     }
@@ -59,9 +57,9 @@ public class ClientHandler implements Runnable {
         CompletableFuture.supplyAsync(() -> {
             //to encode in parallel thread todo non synchronized decryption
             Packet packet = null;
-            packet = Packet.fromBytes(packetBytes);
+            packet = new Packet(packetBytes);
             return packet;
-        }, executor)
+        }, threadPoolExecutor)
 
                 .thenAcceptAsync((inputPacket -> {
                     Packet answerPacket = null;
@@ -83,7 +81,7 @@ public class ClientHandler implements Runnable {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                }), executor)
+                }), threadPoolExecutor)
 
                 .exceptionally(ex -> {
                     ex.printStackTrace();
@@ -113,14 +111,14 @@ public class ClientHandler implements Runnable {
 
         } finally {
 
-            if (executor.getActiveCount() > 0) {
+            if (threadPoolExecutor.getActiveCount() > 0) {
                 try {
-                    executor.awaitTermination(2, TimeUnit.MINUTES);
+                    threadPoolExecutor.awaitTermination(2, TimeUnit.MINUTES);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
-            executor.shutdown();
+            threadPoolExecutor.shutdown();
 
             try {
                 try {

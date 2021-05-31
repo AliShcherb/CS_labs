@@ -71,15 +71,12 @@ public class Network {
                     bMagicIndexes.add(receivedBytes.size());
                 }
                 receivedBytes.add(oneByte[0]);
-
-
-                ////
-                System.out.println("First:"+receivedBytes.toString());
+                ////System.out.println("First:"+receivedBytes.toString());
                 ////
 
                 //check message if no errors in header
                 if (receivedBytes.size() == Packet.HEADER_LENGTH + wLen + Packet.CRC16_LENGTH) {
-                            ByteBuffer buffer = (ByteBuffer) ByteBuffer.allocate(2).put(receivedBytes.get(receivedBytes.size() - 2))
+                    ByteBuffer buffer= (ByteBuffer) ByteBuffer.allocate(2).put(receivedBytes.get(receivedBytes.size() - 2))
                             .put(receivedBytes.get(receivedBytes.size() - 1)).rewind();
                     final short wCrc16_2 =buffer.getShort();
 
@@ -100,21 +97,23 @@ public class Network {
 
                     //check header
                 } else if (receivedBytes.size() >= Packet.HEADER_LENGTH) {
-                    ByteBuffer buffer = (ByteBuffer) ByteBuffer.allocate(2).put(receivedBytes.get(Packet.HEADER_LENGTH - 2))
+
+                    ByteBuffer buffer= (ByteBuffer) ByteBuffer.allocate(2).put(receivedBytes.get(Packet.HEADER_LENGTH - 2))
                                 .put(receivedBytes.get(Packet.HEADER_LENGTH - 1)).rewind();
-                    final short wCrc16_1=buffer.getShort();
+                    final short wCrc16_1 =buffer.getShort();
 
                     final short crc1Evaluated =
                             CRC16.evaluateCrc(toPrimitiveByteArr(receivedBytes.toArray(new Byte[0])), 0, 14);
 
                     if (wCrc16_1 == crc1Evaluated) {
-                        ByteBuffer buffer1 = (ByteBuffer) ByteBuffer.allocate(4).put(receivedBytes.get(10)).put(receivedBytes.get(11))
+
+                                ByteBuffer buffer1 = (ByteBuffer) ByteBuffer.allocate(4).put(receivedBytes.get(10)).put(receivedBytes.get(11))
                                 .put(receivedBytes.get(12)).put(receivedBytes.get(13)).rewind();
                         wLen =buffer1.getInt();
                     } else {
 //                      System.out.println("header reset");
                         resetToFirstBMagic();
-                        Packet ansPac = new Packet((byte) 0, 1, new Message(Message.cTypes.EXCEPTION_FROM_SERVER,0, "Corrupted header!"));
+                        Packet ansPac = new Packet((byte) 0, (long) 1, new Message(Message.cTypes.EXCEPTIONS,0, "Corrupted header!"));
 //                        return ansPac.toPacket();
                         send(ansPac.toBytes());
                     }
@@ -132,7 +131,7 @@ public class Network {
 
     //todo check
     private void resetToFirstBMagic() {
-   //System.out.println(receivedBytes.toString());
+//        System.out.println(receivedBytes.toString());
         //todo notify client???
 //        try {
 //            send("!!!bad packet".getBytes());

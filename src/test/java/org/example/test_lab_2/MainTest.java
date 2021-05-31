@@ -1,6 +1,8 @@
 package org.example.test_lab_2;
 
 import org.example.lab2.*;
+import org.example.lab2.client.Client;
+import org.example.lab2.server.Server;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -18,7 +20,7 @@ public class MainTest {
 
 
     @Test
-    void shouldPass_whenPacketIsValid() throws BadPaddingException, IllegalBlockSizeException {
+    void shouldPass_whenPacketIsValid() {
 
         System.out.println("main start\n");
 
@@ -41,8 +43,8 @@ public class MainTest {
 
         Packet packet1 = null;
         Packet packet2 = null;
-        packet1 = new Packet((byte) 1, 1, new Message(Message.cTypes.ADD_PRODUCT_GROUP, 1, "client1"));
-        packet2 = new Packet((byte) 1, 1, new Message(Message.cTypes.ADD_PRODUCT, 1, "client1"));
+        packet1 = new Packet((byte) 1, (long)1, new Message(Message.cTypes. ADD_GROUP_OF_PRODUCTS, 1, "client1"));
+        packet2 = new Packet((byte) 1, (long)1, new Message(Message.cTypes.ADD_QUANTITY_OF_PRODUCTS_IN_STOCK, 1, "client1"));
 
         Client client1 = new Client(port, packet1);
         Client client2 = new Client(port, packet2);
@@ -70,7 +72,7 @@ public class MainTest {
 
     @Test
         //USER ID = 19
-    void shouldPass_whenPseudoMagicByteProcessedCorrectly() throws BadPaddingException, IllegalBlockSizeException {
+    void shouldPass_whenPseudoMagicByteProcessedCorrectly() {
         System.out.println("main start\n");
 
         int port = 54322;
@@ -92,8 +94,8 @@ public class MainTest {
 
         Packet packet1 = null;
         Packet packet2 = null;
-        packet1 = new Packet((byte) 1, 1, new Message(Message.cTypes.ADD_PRODUCT_GROUP, 19, "client1"));
-        packet2 = new Packet((byte) 1, 1, new Message(Message.cTypes.ADD_PRODUCT, 19, "client1"));
+        packet1 = new Packet((byte) 1, (long)1, new Message(Message.cTypes. ADD_GROUP_OF_PRODUCTS, 19, "client1"));
+        packet2 = new Packet((byte) 1, (long)1, new Message(Message.cTypes.ADD_QUANTITY_OF_PRODUCTS_IN_STOCK, 19, "client1"));
 
         Client client1 = new Client(port, packet1);
 //        client.setDaemon(true);
@@ -133,7 +135,7 @@ public class MainTest {
 
         InputStream input = socket.getInputStream();
         OutputStream output = socket.getOutputStream();
-        Packet packet1 = new Packet((byte) 1, 1, new Message(Message.cTypes.ADD_PRODUCT_GROUP, 1, "client1"));
+        Packet packet1 = new Packet((byte) 1, (long)1, new Message(Message.cTypes.ADD_GROUP_OF_PRODUCTS, 1, "client1"));
 
 
         Network network = new Network(input, output, 5, TimeUnit.SECONDS);
@@ -155,7 +157,7 @@ public class MainTest {
 
         InputStream input = socket.getInputStream();
         OutputStream output = socket.getOutputStream();
-        Packet packet1 = new Packet((byte) 1, 1, new Message(Message.cTypes.ADD_PRODUCT_GROUP, 1, "client1"));
+        Packet packet1 = new Packet((byte) 1, (long)1, new Message(Message.cTypes.ADD_GROUP_OF_PRODUCTS, 1, "client1"));
 
 
         Network network = new Network(input, output, 5, TimeUnit.SECONDS);
@@ -165,7 +167,7 @@ public class MainTest {
         network.send(corruptedPac);
 
         byte[] answerPacketBytes = network.receive();
-        Packet answerPacketFromServer = Packet.fromBytes(answerPacketBytes);
+        Packet answerPacketFromServer = new Packet(answerPacketBytes);
 
 
         assertEquals("Corrupted header!", answerPacketFromServer.getBMsq().getPayload());
