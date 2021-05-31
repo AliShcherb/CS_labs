@@ -63,6 +63,4 @@ public class Message {
         byte[] myMes = payload.getBytes(StandardCharsets.UTF_8);
         encryptedMessageInBytes = Cryptor.encryptMessage(myMes);
     }
-
-
 }

@@ -8,9 +8,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import org.example.lab1.Decryption;
 
 public class Network {
 
@@ -50,12 +53,13 @@ public class Network {
 
             while (true) {
                 if (inputStream.available() == 0) {
-                    if (!newData) {
-                        throw new TimeoutException();
-                    }
+//                    if (!newData) {
+//                        throw new TimeoutException();
+//                    }
                     newData = false;
 
                     try {
+                        System.out.println("No new data...sleeping!!!");
                         timeUnit.sleep(maxTimeout);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -65,6 +69,7 @@ public class Network {
 
 
                 inputStream.read(oneByte);
+                System.out.println("NEW DATA!!!");
                 newData = true;
 
                 if (Packet.B_MAGIC.equals(oneByte[0]) && receivedBytes.size() > 0) {
@@ -84,8 +89,11 @@ public class Network {
                     final short wCrc16_2 =buffer.getShort();
 
                     packetBytes = toPrimitiveByteArr(receivedBytes.toArray(new Byte[0]));
-                    final short crc2Evaluated = CRC16.evaluateCrc(packetBytes, Packet.HEADER_LENGTH,
-                            receivedBytes.size() - 2);
+                    byte[] decryptedBytes = Decryption.decrypt(
+                            Arrays.copyOfRange(packetBytes, Packet.HEADER_LENGTH, receivedBytes.size() - 2)
+                    );
+
+                    final short crc2Evaluated = CRC16.calculateCRC(decryptedBytes);
 
                     if (wCrc16_2 == crc2Evaluated) {
                         receivedBytes.clear();
