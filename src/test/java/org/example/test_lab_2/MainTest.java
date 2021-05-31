@@ -18,7 +18,7 @@ public class MainTest {
 
 
     @Test
-    void shouldPass_whenPacketIsValid() {
+    void shouldPass_whenPacketIsValid() throws BadPaddingException, IllegalBlockSizeException {
 
         System.out.println("main start\n");
 
@@ -70,7 +70,7 @@ public class MainTest {
 
     @Test
         //USER ID = 19
-    void shouldPass_whenPseudoMagicByteProcessedCorrectly() {
+    void shouldPass_whenPseudoMagicByteProcessedCorrectly() throws BadPaddingException, IllegalBlockSizeException {
         System.out.println("main start\n");
 
         int port = 54322;

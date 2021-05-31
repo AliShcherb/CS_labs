@@ -3,11 +3,19 @@ package org.example.lab2;
 
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 import lombok.Data;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+
 @Data
 public class Message {
+    private byte[] encryptedMessageInBytes;
+    public Message() {
+
+    }
 
     public enum cTypes {
         GET_PRODUCT_AMOUNT,
@@ -28,11 +36,18 @@ public class Message {
     private Integer bUserId;
     private String payload;
 
+    public byte[] getEncryptedMessageInBytes() {
+        return encryptedMessageInBytes;
+    }
+    public void setEncryptedMessageInBytes(byte[] encryptedMessageInBytes) {
+        this.encryptedMessageInBytes = encryptedMessageInBytes;
+    }
 
-    public Message(cTypes cType, Integer bUserId, String message) {
+    public Message(cTypes cType, Integer bUserId, String message) throws BadPaddingException, IllegalBlockSizeException {
         this.cType = cType.ordinal();
         this.bUserId = bUserId;
         this.payload = message;
+        encode();
     }
 
     public byte[] toBytes() {
@@ -42,6 +57,11 @@ public class Message {
                 .putInt(bUserId)
                 .put(payloadBytes)
                 .array();
+    }
+
+    public void encode() throws BadPaddingException, IllegalBlockSizeException {
+        byte[] myMes = payload.getBytes(StandardCharsets.UTF_8);
+        encryptedMessageInBytes = Cryptor.encryptMessage(myMes);
     }
 
 

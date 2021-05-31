@@ -47,6 +47,7 @@ public class Client extends Thread {
                 try {
                     byte[] packetBytes = network.receive();
                     Packet packet = Packet.fromBytes(packetBytes);
+                   // System.out.println("Package:"+packet);
                     System.out.println(Thread.currentThread().getName() +  " - answer from server: " + packet.bMsq.getPayload());
                 } catch (TimeoutException e) {
                     System.out.println("server timeout");

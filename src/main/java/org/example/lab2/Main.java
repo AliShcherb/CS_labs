@@ -1,11 +1,13 @@
 package org.example.lab2;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
 import java.io.IOException;
 
 
 public class Main {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, BadPaddingException, IllegalBlockSizeException {
         System.out.println("main start\n");
 
         int port = 54321;
@@ -27,13 +29,17 @@ public class Main {
 
         Packet packet1 = null;
         Packet packet2 = null;
-        packet1  = new Packet((byte) 1, 1, new Message(Message.cTypes.ADD_PRODUCT_GROUP,1,"client1"));
-        packet2  = new Packet((byte) 1, 1, new Message(Message.cTypes.ADD_PRODUCT,1,"client2"));
+        packet1  = new Packet ((byte) 1, 1, new Message(Message.cTypes.ADD_PRODUCT_GROUP,1,"client1"));
 
+        System.out.println(packet1);
+        packet2  = new Packet((byte) 1, 1, new Message(Message.cTypes.ADD_PRODUCT,1,"client2"));
+        System.out.println(packet1);
         Client client1 = new Client(port, packet1);
+        System.out.println(packet1);
 //        client.setDaemon(true);
 
         Client client2 = new Client(port, packet2);
+        System.out.println(packet2);
 //        client2.setDaemon(true);
 
         client1.start();

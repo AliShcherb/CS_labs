@@ -1,5 +1,7 @@
 package org.example.lab2;
 
+import org.example.lab1.Packet;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.SocketException;
@@ -10,7 +12,9 @@ import java.util.concurrent.TimeUnit;
 public class Server extends Thread {
 
     public ServerSocket server;
-
+    public Packet readPacket(byte[] packetBytes) {
+        return Packet.fromBytes(packetBytes);
+    }
     //    private ThreadPoolExecutor executor  = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
     private ThreadPoolExecutor executor = (ThreadPoolExecutor)Executors.newFixedThreadPool(10);
     private int             port;

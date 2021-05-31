@@ -72,6 +72,11 @@ public class Network {
                 }
                 receivedBytes.add(oneByte[0]);
 
+
+                ////
+                System.out.println("First:"+receivedBytes.toString());
+                ////
+
                 //check message if no errors in header
                 if (receivedBytes.size() == Packet.HEADER_LENGTH + wLen + Packet.CRC16_LENGTH) {
                             ByteBuffer buffer = (ByteBuffer) ByteBuffer.allocate(2).put(receivedBytes.get(receivedBytes.size() - 2))
@@ -127,7 +132,7 @@ public class Network {
 
     //todo check
     private void resetToFirstBMagic() {
-//        System.out.println(receivedBytes.toString());
+   //System.out.println(receivedBytes.toString());
         //todo notify client???
 //        try {
 //            send("!!!bad packet".getBytes());

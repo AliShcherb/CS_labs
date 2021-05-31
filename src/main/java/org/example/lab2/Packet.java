@@ -66,7 +66,7 @@ public class Packet {
 
         ByteBuffer messageBuffer = ByteBuffer.wrap(decryptedBytes)
                 .order(ByteOrder.BIG_ENDIAN);
-        
+
         int bUserId = messageBuffer.getInt();
         byte[] messageBody = new byte[mLength - 8];
         messageBuffer.get(messageBody);
@@ -74,7 +74,7 @@ public class Packet {
 
         Message message = new Message(cType, bUserId, new String(messageBody));
 
-           message.setCType(buffer.getInt());
+        message.setCType(buffer.getInt());
         short crcMessage = buffer.getShort();
         if (calculateCRC(message.toBytes()) != crcMessage) {
             throw new IllegalArgumentException("Message CRC16");
@@ -82,6 +82,7 @@ public class Packet {
 
         return new Packet(clientId, packetId, message);
     }
+
 
     public byte[] toBytes() {
         byte[] messageBytes = bMsq.toBytes();
