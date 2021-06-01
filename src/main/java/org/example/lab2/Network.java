@@ -51,11 +51,14 @@ public class Network {
 
             boolean newData = true;
 
+            long startTime = System.currentTimeMillis();
+            long timeoutValue = 30000L;
             while (true) {
                 if (inputStream.available() == 0) {
-//                    if (!newData) {
-//                        throw new TimeoutException();
-//                    }
+                    long elapsedTime = System.currentTimeMillis() - startTime;
+                    if (!newData && elapsedTime > timeoutValue) {
+                        throw new TimeoutException();
+                    }
                     newData = false;
 
                     try {
