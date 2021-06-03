@@ -10,24 +10,24 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 
 public class StoreServerUDP extends Thread {
-    private DatagramSocket datagramSocket = null;
-    private int listenPort;
+    private DatagramSocket dSocket;
+    private int port;
 
-    private ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
+    private ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
 
-    static ConcurrentHashMap<Integer, Long> prev = new ConcurrentHashMap<>();
-    static ConcurrentHashMap<Integer, Long> now = new ConcurrentHashMap<>();
+    static ConcurrentHashMap<Integer, Long> map1 = new ConcurrentHashMap<>();
+    static ConcurrentHashMap<Integer, Long> map2 = new ConcurrentHashMap<>();
 
 
     public StoreServerUDP(int listenPort) {
-        this.listenPort = listenPort;
+        this.port = listenPort;
         try {
-            datagramSocket = new DatagramSocket(listenPort);
+            dSocket = new DatagramSocket(listenPort);
         } catch (SocketException e) {
             e.printStackTrace();
         }
         try {
-            datagramSocket.setSoTimeout(7000);
+            dSocket.setSoTimeout(7000);
         } catch (SocketException e) {
             e.printStackTrace();
         }
@@ -36,52 +36,47 @@ public class StoreServerUDP extends Thread {
 
     @Override
     public void run() {
-        System.out.println("Server running on port: " + listenPort);
+        System.out.println("Port: " + port);
 
-        ClientMapCleaner cmap = new ClientMapCleaner();
+        MapCleanerForClient cleaner = new MapCleanerForClient();
 
         while (true) {
-
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[2048];
             DatagramPacket datagramPacket = new DatagramPacket(buffer, buffer.length);
-
             try {
-                datagramSocket.receive(datagramPacket);
+                dSocket.receive(datagramPacket);
             } catch (IOException e) {
-                System.out.println("Server Socket timed out!");
-                executor.shutdown();
-                datagramSocket.close();
-                cmap.isActive = false;
-                System.out.println("Waiting for ClientMapCleaner to shutdown..");
+                threadPoolExecutor.shutdown();
+                dSocket.close();
+                cleaner.isActive = false;
                 break;
             }
-
-            executor.execute(new UDPResponder(datagramPacket));
+            threadPoolExecutor.execute(new UDPResponder(datagramPacket));
         }
 
     }
 
-    public synchronized static boolean packetCanBeProcessed(Integer userId, Long packetId) {
-        if (now.containsKey(userId)) {
-            if (now.get(userId).compareTo(packetId) >= 0) return false;
-            now.put(userId, packetId);
+    public synchronized static boolean packetValidation(Integer userId, Long packetId) {
+        if (!map2.containsKey(userId)) {
+            map1.put(userId, packetId);
+            map2.put(userId, packetId);
             return true;
-        } else if (!now.containsKey(userId)) {
-            prev.put(userId, packetId);
-            now.put(userId, packetId);
+        } else if (map2.containsKey(userId)) {
+            if (map2.get(userId).compareTo(packetId) >= 0) return false;
+            map2.put(userId, packetId);
             return true;
         }
         return false;
     }
 
     public synchronized static void clearMaps() {
-        for (Integer userId : now.keySet()) {
-            if (prev.containsKey(userId) && prev.get(userId).compareTo(now.get(userId)) == 0) {
-                prev.remove(userId);
-                now.remove(userId);
+        for (Integer userId : map2.keySet()) {
+            if (map1.containsKey(userId) && map1.get(userId).compareTo(map2.get(userId)) == 0) {
+                map1.remove(userId);
+                map2.remove(userId);
             }
         }
-        prev.putAll(now);
+        map1.putAll(map2);
     }
 
 

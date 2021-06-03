@@ -1,69 +1,48 @@
 package org.example.lab3.UDP;
-import org.example.lab3.*;
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import java.io.IOException;
+
+import lombok.SneakyThrows;
+import org.example.lab3.Message;
+import org.example.lab3.Packet;
+import org.example.lab3.Processor;
+
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.SocketException;
 
 
 public class UDPResponder implements Runnable {
-    private Packet answerPac = null;
-    private DatagramSocket ds;
-    private DatagramPacket dp;
+    private Packet answerPacket = null;
+    private DatagramSocket dSocket;
+    private DatagramPacket dPacket;
     private Object lock = new Object();
 
     UDPResponder(DatagramPacket dp) {
-        this.dp = dp;
+        this.dPacket = dp;
     }
 
+    @SneakyThrows
     @Override
     public void run() {
-        // System.out.println("In run");
 
         synchronized (lock) {
 
-            Packet pacToBeProcessed = null;
-            // System.out.println("In get");
-            pacToBeProcessed = Packet.fromBytes(dp.getData());
+            Packet toProceed = Packet.fromBytes(dPacket.getData());
 
-            if(StoreServerUDP.packetCanBeProcessed(pacToBeProcessed.getBMsq().getBUserId(), pacToBeProcessed.getBPktId())) {
-                //  System.out.println("In process");
-                answerPac = Processor.process(pacToBeProcessed);
+            if (StoreServerUDP.packetValidation(toProceed.getBMsq().getBUserId(), toProceed.getBPktId())) {
 
-                try {
-                    ds = new DatagramSocket();
-                } catch (SocketException e) {
-                    e.printStackTrace();
-                }
-
-                try {
-                    ds.send(new DatagramPacket(answerPac.toBytes(), answerPac.toBytes().length, dp.getAddress(), dp.getPort()));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                ds.close();
-
+                answerPacket = Processor.process(toProceed);
+                dSocket = new DatagramSocket();
+                dSocket.send(new DatagramPacket(answerPacket.toBytes(), answerPacket.toBytes().length, dPacket.getAddress(), dPacket.getPort()));
+                dSocket.close();
 
             } else {
 
+                answerPacket = new Packet(toProceed.getBSrc(), toProceed.getBPktId(),
+                        new Message(Message.cTypes.EXCEPTIONS, 0, "Already processed"));
 
-                answerPac = new Packet(pacToBeProcessed.getBSrc(), pacToBeProcessed.getBPktId(),
-                        new Message(Message.cTypes.EXCEPTIONS, 0, "This packet has been processed yet!"));
+                dSocket = new DatagramSocket();
+                dSocket.send(new DatagramPacket(answerPacket.toBytes(), answerPacket.toBytes().length, dPacket.getAddress(), dPacket.getPort()));
 
-                try {
-                    ds = new DatagramSocket();
-                } catch (SocketException e) {
-                    e.printStackTrace();
-                }
-
-                try {
-                    ds.send(new DatagramPacket(answerPac.toBytes(), answerPac.toBytes().length, dp.getAddress(), dp.getPort()));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                ds.close();
+                dSocket.close();
 
             }
 

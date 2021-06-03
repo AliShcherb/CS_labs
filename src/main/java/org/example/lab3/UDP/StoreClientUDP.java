@@ -1,19 +1,19 @@
 package org.example.lab3.UDP;
 
-import org.example.lab3.*;
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
+import org.example.lab3.Packet;
+
 import java.io.IOException;
 import java.net.*;
 
 public class StoreClientUDP extends Thread {
-    DatagramSocket ds = null;
-    DatagramPacket dp = null;
+    DatagramSocket dSocket = null;
+    DatagramPacket dPacket = null;
     InetAddress ip = InetAddress.getLocalHost();
     private int port;
     private Packet packet;
     private Packet answerPacket;
-    private byte[] packetBytes;
+    private byte[] bytes;
+    final int timeoutStandart = 1500;
 
 
     public StoreClientUDP(int port, Packet packet) throws UnknownHostException {
@@ -21,8 +21,8 @@ public class StoreClientUDP extends Thread {
         this.packet = packet;
 
         try {
-            ds = new DatagramSocket();
-            ds.setSoTimeout(1500);
+            dSocket = new DatagramSocket();
+            dSocket.setSoTimeout(timeoutStandart);
         } catch (SocketException e) {
             e.printStackTrace();
         }
@@ -30,31 +30,18 @@ public class StoreClientUDP extends Thread {
         this.start();
     }
 
-    @Override
-    public void run() {
+    private void sendReceive(Packet packet) throws SocketException {
 
-        sendAndReceive(packet);
-
-    }
-
-    private void sendAndReceive(Packet packet) {
-
-        if (ds.isClosed()) {
-            try {
-                ds = new DatagramSocket();
-                ds.setSoTimeout(1500);
-            } catch (SocketException e) {
-                e.printStackTrace();
-            }
+        if (dSocket.isClosed()) {
+            dSocket = new DatagramSocket();
+            dSocket.setSoTimeout(timeoutStandart);
         }
-
-
-        packetBytes = packet.toBytes();
-        dp = new DatagramPacket(packetBytes, packetBytes.length, ip, port);
+        bytes = packet.toBytes();
+        dPacket = new DatagramPacket(bytes, bytes.length, ip, port);
         boolean received = false;
 
         try {
-            ds.send(dp);
+            dSocket.send(dPacket);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -65,37 +52,46 @@ public class StoreClientUDP extends Thread {
             DatagramPacket incomingDatagramPacket = new DatagramPacket(buff, buff.length);
 
             try {
-                ds.receive(incomingDatagramPacket);
+                dSocket.receive(incomingDatagramPacket);
             } catch (IOException e) {
-                if (received) {             //if correct packet received from server
-                    System.out.println("Client Socket timed out!");
-                    ds.close();
+                if (received) {
+                    dSocket.close();
                     break;
                 } else {
-                    ds.close();
-                    System.out.println("resending packet (id : " + packet.getBPktId() + ") ..");
-                    sendAndReceive(packet);
+                    dSocket.close();
+                    System.out.println("Resending packet id(" + packet.getBPktId() + ")");
+                    sendReceive(packet);
                     break;
                 }
             }
 
             Packet answerPacket = null;
             answerPacket = Packet.fromBytes(incomingDatagramPacket.getData());
-            this.answerPacket = answerPacket; //this field was made to assert incoming message from server
-
+            this.answerPacket = answerPacket;
             Long a = answerPacket.getBPktId();
             Long b = packet.getBPktId();
-            if (a==b) received = true;
-            System.out.println("Message from server : " + answerPacket.getBMsq().getPayload() + " ; Packet id : " + answerPacket.getBPktId());
+            if (a == b) received = true;
+            System.out.println("Answer for id(" + answerPacket.getBPktId() + "): " + answerPacket.getBMsq().getPayload());
         }
     }
 
-    public Packet getAnswerPacket() throws InterruptedException {
+    @Override
+    public void run() {
+
+        try {
+            sendReceive(packet);
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public Packet getAnswer() throws InterruptedException {
         while (true) {
             if (answerPacket != null) {
                 break;
             }
-            this.sleep(1);
+            this.sleep(timeoutStandart / 1000);
         }
         return answerPacket;
     }
