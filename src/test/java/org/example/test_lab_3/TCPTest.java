@@ -1,4 +1,4 @@
-package org.example.test_lab3;
+package org.example.test_lab_3;
 
 import org.example.lab3.*;
 import org.example.lab3.TCP.Exceptions.InactiveServerException;
@@ -7,8 +7,6 @@ import org.example.lab3.TCP.StoreClientTCP;
 import org.example.lab3.TCP.StoreServerTCP;
 import org.junit.jupiter.api.Test;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -37,7 +35,7 @@ public class TCPTest {
 
         Packet packet = null;
         packet =
-                new Packet((byte) 1, 1, new Message(Message.cTypes.ADD_PRODUCT_GROUP, 1, "client1"));
+                new Packet((byte) 1, 1, new Message(Message.cTypes.ADD_GROUP_OF_PRODUCTS, 1, "client1"));
         StoreClientTCP clientTCP = new StoreClientTCP(port, packet);
 
         clientTCP.setUncaughtExceptionHandler(h);
@@ -75,7 +73,7 @@ public class TCPTest {
 
         Packet packet = null;
         packet =
-                new Packet((byte) 1, 1, new Message(Message.cTypes.ADD_PRODUCT_GROUP, 1, "client1"));
+                new Packet((byte) 1, 1, new Message(Message.cTypes.ADD_GROUP_OF_PRODUCTS, 1, "client1"));
 
         int clientsAmount = 10;
         ArrayList<StoreClientTCP> clients = new ArrayList<>(clientsAmount);
@@ -129,7 +127,7 @@ public class TCPTest {
 
         Packet packet = null;
         packet =
-                new Packet((byte) 1, 1, new Message(Message.cTypes.ADD_PRODUCT_GROUP, 1, "client1"));
+                new Packet((byte) 1, 1, new Message(Message.cTypes.ADD_GROUP_OF_PRODUCTS, 1, "client1"));
 
         int clientsAmount = 10;
         ArrayList<StoreClientTCP> clients = new ArrayList<>(clientsAmount);

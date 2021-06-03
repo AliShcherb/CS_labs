@@ -37,6 +37,13 @@ class CRC16 {
             0x8201, 0x42C0, 0x4380, 0x8341, 0x4100, 0x81C1, 0x8081, 0x4040,
     };
 
+    public static short calculateCRC(byte[] bytes,int a, int b) {
+        int crc = 0x0000;
+        for (int i = a; i < b; ++i) {
+            crc = (crc >>> 8) ^ table[(crc ^ bytes[i]) & 0xff];
+        }
+        return (short) crc;
+    }
     public static short calculateCRC(byte[] bytes) {
         int crc = 0x0000;
         for (byte b : bytes) {
@@ -44,11 +51,5 @@ class CRC16 {
         }
         return (short) crc;
     }
-    public static short evaluateCrc(final byte[] input, final int from, final int to) {
-        int crc = 0x0000;
-        for (int i = from; i < to; ++i) {
-            crc = (crc >>> 8) ^ table[(crc ^ input[i]) & 0xff];
-        }
-        return (short) crc;
-    }
+
 }

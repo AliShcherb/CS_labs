@@ -1,5 +1,6 @@
 package org.example.lab2;
 import static org.example.lab2.CRC16.calculateCRC;
+import static org.example.lab2.Network.MESSAGE_LENGTH;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -15,6 +16,8 @@ public class Packet {
     public final static Byte    B_MAGIC       = 0x13;
     public final static Integer HEADER_LENGTH = 16;
     public final static Integer CRC16_LENGTH = 2;
+
+
     public Message bMsq;
     public final byte bSrc;
     public final long bPktId;
@@ -38,16 +41,16 @@ public class Packet {
             throw new IllegalArgumentException("Unexpected bMagic");
 
         byte clientId = buffer.get();
-        System.out.println("Client ID: " + clientId);
+        //System.out.println("Client ID: " + clientId);
 
         long packetId = buffer.getLong();
-        System.out.println("Packet ID: " + packetId);
+        //System.out.println("Packet ID: " + packetId);
 
         int mLength = buffer.getInt();
-        System.out.println("Length:" + mLength);
+        //System.out.println("Length:" + mLength);
 
         short crcHead = buffer.getShort();
-        System.out.println("CRC16 of header:" + Integer.toBinaryString(0xFFFF & crcHead));
+       // System.out.println("CRC16 of header:" + Integer.toBinaryString(0xFFFF & crcHead));
 
         byte[] head = ByteBuffer.allocate(14)
                 .order(ByteOrder.BIG_ENDIAN)
@@ -90,7 +93,7 @@ public class Packet {
         byte[] messageBytes = bMsq.toBytes();
         byte[] encryptedBytes = Encryption.encrypt(messageBytes);
 
-        byte[] head = ByteBuffer.allocate(14)
+        byte[] head = ByteBuffer.allocate(MESSAGE_LENGTH)
                 .order(ByteOrder.BIG_ENDIAN)
                 .put(B_MAGIC)
                 .put(bSrc)
@@ -98,7 +101,8 @@ public class Packet {
                 .putInt(wLen)
                 .array();
 
-        return ByteBuffer.allocate(head.length + 2 + messageBytes.length + 2)
+        final Integer LENGTH =head.length + 2 + messageBytes.length + 2;
+        return ByteBuffer.allocate(LENGTH)
                 .order(ByteOrder.BIG_ENDIAN)
                 .put(head)
                 .putShort(calculateCRC(head))

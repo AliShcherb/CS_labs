@@ -36,7 +36,7 @@ public class ClientHandler implements Runnable {
         try {
             Packet helloPacket = null;
             helloPacket = new Packet((byte) 0, 0,
-                    new Message(Message.cTypes.OK, 0, "connection established"));
+                    new Message(Message.cTypes.STANDART_ANSWER, 0, "connection established"));
             network.send(helloPacket.toBytes());
 
             while (true) {
@@ -69,12 +69,6 @@ public class ClientHandler implements Runnable {
                     Packet answerPacket = null;
                     try {
                         answerPacket = Processor.process(inputPacket);
-                    } catch (BadPaddingException e) {
-                        e.printStackTrace();
-                        System.err.println("BadPaddingException");
-                    } catch (IllegalBlockSizeException e) {
-                        e.printStackTrace();
-                        System.err.println("IllegalBlockSizeException");
                     } catch (NullPointerException e) {
                         e.printStackTrace();
                         System.err.println("NullPointerException");

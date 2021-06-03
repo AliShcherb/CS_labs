@@ -90,7 +90,7 @@ public class Network {
 
                     packetBytes = toPrimitiveByteArr(receivedBytes.toArray(new Byte[0]));
                     final short crc2Evaluated =
-                            CRC16.evaluateCrc(packetBytes, Packet.HEADER_LENGTH, receivedBytes.size() - 2);
+                            CRC16.calculateCRC(packetBytes, Packet.HEADER_LENGTH, receivedBytes.size() - 2);
 
                     if (wCrc16_2 == crc2Evaluated) {
                         receivedBytes.clear();
@@ -110,7 +110,7 @@ public class Network {
                     final short wCrc16_1 =buffer.getShort();
 
                     final short crc1Evaluated =
-                            CRC16.evaluateCrc(toPrimitiveByteArr(receivedBytes.toArray(new Byte[0])), 0, 14);
+                            CRC16.calculateCRC(toPrimitiveByteArr(receivedBytes.toArray(new Byte[0])), 0, 14);
 
                     if (wCrc16_1 == crc1Evaluated) {
 

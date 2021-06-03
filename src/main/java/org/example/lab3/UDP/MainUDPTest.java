@@ -19,11 +19,11 @@ public class MainUDPTest {
         Packet pac2 = null;
 
         pac0 = new Packet((byte) 1, 1,
-                new Message(Message.cTypes.ADD_PRODUCT_GROUP, 0, "test client 0"));
+                new Message(Message.cTypes.ADD_GROUP_OF_PRODUCTS, 0, "test client 0"));
         pac1 = new Packet((byte) 1, 1,
-                new Message(Message.cTypes.ADD_PRODUCT, 1, "test client 1"));
+                new Message(Message.cTypes.ADD_QUANTITY_OF_PRODUCTS_IN_STOCK, 1, "test client 1"));
         pac2 = new Packet((byte) 1, 1,
-                new Message(Message.cTypes.GET_PRODUCT_AMOUNT, 2, "test client 2"));
+                new Message(Message.cTypes.GET_QUANTITY_OF_PRODUCTS_IN_STOCK, 2, "test client 2"));
 
         StoreServerUDP ss = new StoreServerUDP(port);
 

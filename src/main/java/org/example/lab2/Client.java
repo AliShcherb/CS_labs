@@ -1,22 +1,22 @@
 package org.example.lab2;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import java.io.IOException;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.SneakyThrows;
+
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
+@EqualsAndHashCode(callSuper = true)
+@Data
 public class Client extends Thread {
 
-    private Socket       socket;
-    private InputStream  input;
-    private OutputStream output;
-
+    private Socket socket;
+    private InputStream in;
+    private OutputStream out;
     private Packet packet;
-
     private int port;
 
     public Client(int port, Packet packet) {
@@ -24,64 +24,45 @@ public class Client extends Thread {
         this.packet = packet;
     }
 
+    @SneakyThrows
     @Override
     public void run() {
-        Thread.currentThread().setName(Thread.currentThread().getId() + " - Client");
+        int clientId = (int) Thread.currentThread().getId();
+        Thread.currentThread().setName("Client:" + clientId);
 
         try {
-            try {
-                socket = new Socket("localhost", port);
-                input = socket.getInputStream();
-                output = socket.getOutputStream();
 
-                Network network = new Network(input, output,5, TimeUnit.SECONDS);
+            socket = new Socket("localhost", port);
+            in = socket.getInputStream();
+            out = socket.getOutputStream();
+
+            Network network = new Network(in, out, 10, TimeUnit.SECONDS);
 
 
-                network.send(packet.toBytes());
+            network.send(packet.toBytes());
 
-                System.out.println(Thread.currentThread().getName() +  " - client starts");
+            byte[] packetBytes = network.receive();
+            Packet packet = Packet.fromBytes(packetBytes);
+            // System.out.println("Packet:" + packet);
+            System.out.println(Thread.currentThread().getName() + " \n Received answer: " + packet.bMsq.getPayload());
+            in.close();
+            out.close();
 
-//                output.flush();
-//                System.out.println("client flushed");
-
-                try {
-                    byte[] packetBytes = network.receive();
-                    Packet packet = Packet.fromBytes(packetBytes);
-                   // System.out.println("Package:"+packet);
-                    System.out.println(Thread.currentThread().getName() +  " - answer from server: " + packet.bMsq.getPayload());
-                } catch (TimeoutException e) {
-                    System.out.println("server timeout");
-                } catch (BadPaddingException e) {
-                    e.printStackTrace();
-                } catch (IllegalBlockSizeException e) {
-                    e.printStackTrace();
-                } finally {
-                    input.close();
-                    output.close();
-                }
-            } finally {
-                socket.close();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    public void shutdown(){
-        try{
-
-            try {
-                input.close();
-                output.close();
-            }finally {
-                socket.close();
-            }
-
-        }catch (IOException e){
-            e.printStackTrace();
+        } finally {
+            ///bruh
+            socket.close();
         }
     }
 
+    @SneakyThrows
+    public void shutdown() {
+        try {
 
+            in.close();
+            out.close();
+        } finally {
+            socket.close();
+        }
+
+    }
 }

@@ -1,5 +1,6 @@
 package org.example.lab2;
 
+
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import java.io.IOException;
@@ -9,28 +10,31 @@ import java.net.Socket;
 import java.util.*;
 import java.util.concurrent.*;
 
-public class ClientHandler implements Runnable {
+import static java.lang.Thread.currentThread;
+import static java.util.concurrent.CompletableFuture.*;
 
-    private Socket       clientSocket;
-    private OutputStream outputStream;
-    private InputStream  inputStream;
+public class ClientProcessor implements Runnable {
+
+    private Socket socket;
+
+    private InputStream in;
+    private OutputStream out;
 
     private Network network;
 
-    private ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
+    private ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
 
 
-    public ClientHandler(Socket clientSocket, int maxTimeout, TimeUnit timeUnit) throws IOException {
-        this.clientSocket = clientSocket;
-        inputStream = clientSocket.getInputStream();
-        outputStream = clientSocket.getOutputStream();
-
-        network = new Network(inputStream, outputStream, maxTimeout, timeUnit);
+    public ClientProcessor(Socket socket, int max, TimeUnit unit) throws IOException {
+        this.socket = socket;
+        in = socket.getInputStream();
+        out = socket.getOutputStream();
+        network = new Network(in, out, max, unit);
     }
 
     @Override
     public void run() {
-        Thread.currentThread().setName(Thread.currentThread().getName() + " - ClientHandler");
+        currentThread().setName(currentThread().getName() + "ClientProcessor");
         try {
 
             while (true) {
@@ -38,17 +42,9 @@ public class ClientHandler implements Runnable {
                 handlePacketBytes(Arrays.copyOf(packetBytes, packetBytes.length));
             }
 
-        } catch (IOException e) {
-            if (e.getMessage().equals("Stream closed.")) {
-                //todo notify client?
-            } else {
-                e.printStackTrace();
-            }
         } catch (TimeoutException e) {
-            System.out.println("client timeout");
-        } catch (BadPaddingException e) {
             e.printStackTrace();
-        } catch (IllegalBlockSizeException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         } finally {
             shutdown();
@@ -56,77 +52,64 @@ public class ClientHandler implements Runnable {
     }
 
     private void handlePacketBytes(byte[] packetBytes) {
-        CompletableFuture.supplyAsync(() -> {
-            //to encode in parallel thread todo non synchronized decryption
-            Packet packet = null;
+        supplyAsync(() -> {
+            Packet packet;
             packet = Packet.fromBytes(packetBytes);
-            return packet;
-        }, executor)
+            return packet; }, threadPoolExecutor)
 
                 .thenAcceptAsync((inputPacket -> {
                     Packet answerPacket = null;
                     try {
                         answerPacket = Processor.process(inputPacket);
-                    } catch (BadPaddingException e) {
-                        e.printStackTrace();
-                        System.out.println("BadPaddingException");
-                    } catch (IllegalBlockSizeException e) {
-                        e.printStackTrace();
-                        System.out.println("IllegalBlockSizeException");
                     } catch (NullPointerException e) {
                         e.printStackTrace();
-                        System.out.println("null");
+                        System.out.println(e);
                     }
 
-                    try {
-                        network.send(answerPacket.toBytes());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }), executor)
+                    network.send(answerPacket.toBytes());
+                }), threadPoolExecutor)
 
                 .exceptionally(ex -> {
                     ex.printStackTrace();
-//            System.err.println(ex.toString());
                     return null;
                 });
     }
 
 
     public void shutdown() {
-        //todo shutdown
+
         try {
             Thread.sleep(5000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-        System.out.println(Thread.currentThread().getName() + " shutdown");
-        //close inputStream
+        System.out.println(currentThread().getName() + "  disconnect");
+
         try {
-            if (inputStream.available() > 0) {
-                Thread.sleep(5000);
+            if (in.available() > 0) {
+                Thread.sleep(3000);
             }
-            inputStream.close();
+            in.close();
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
 
         } finally {
 
-            if (executor.getActiveCount() > 0) {
+            if (threadPoolExecutor.getActiveCount() > 0) {
                 try {
-                    executor.awaitTermination(2, TimeUnit.MINUTES);
+                    threadPoolExecutor.awaitTermination(2, TimeUnit.MINUTES);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
-            executor.shutdown();
+            threadPoolExecutor.shutdown();
 
             try {
                 try {
-                    outputStream.close();
+                    out.close();
                 } finally {
-                    clientSocket.close();
+                    socket.close();
                 }
             } catch (IOException e) {
                 e.printStackTrace();

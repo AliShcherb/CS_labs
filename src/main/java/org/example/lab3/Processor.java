@@ -1,7 +1,4 @@
-package org.example.lab2;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
+package org.example.lab3;
 
 
 public class Processor {

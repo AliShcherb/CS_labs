@@ -31,9 +31,10 @@ public class Main {
         Packet packet1 = null;
 
         Packet packet2 = null;
+
         packet1 =
-                new Packet((byte) 1, 1, new Message(Message.cTypes.ADD_PRODUCT_GROUP, 1, "client1"));
-        packet2 = new Packet((byte) 1, 1, new Message(Message.cTypes.ADD_PRODUCT, 1, "client2"));
+                new Packet((byte) 1, 1, new Message(Message.cTypes.ADD_GROUP_OF_PRODUCTS, 1, "client1"));
+        packet2 = new Packet((byte) 1, 1, new Message(Message.cTypes.ADD_QUANTITY_OF_PRODUCTS_IN_STOCK, 1, "client2"));
 
         StoreClientTCP client1 = new StoreClientTCP(port, packet1);
 

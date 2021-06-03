@@ -1,6 +1,5 @@
 package org.example.lab2;
 
-import org.example.lab1.Packet;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -12,15 +11,10 @@ import java.util.concurrent.TimeUnit;
 public class Server extends Thread {
 
     public ServerSocket server;
-    public Packet readPacket(byte[] packetBytes) {
-        return Packet.fromBytes(packetBytes);
-    }
-    //    private ThreadPoolExecutor executor  = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
-    private ThreadPoolExecutor executor = (ThreadPoolExecutor)Executors.newFixedThreadPool(10);
-    private int             port;
+    private ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
+    private int port;
 
     public Server(int port) throws IOException {
-        super("Server");
         this.port = port;
         server = new ServerSocket(port);
     }
@@ -30,21 +24,20 @@ public class Server extends Thread {
     public void run() {
 
         try {
-            System.out.println("Server running on port: " + port);
+            System.out.println("Port: " + port);
 
             while (true) {
-                executor.execute(new ClientHandler(server.accept(), 2, TimeUnit.SECONDS));
+                threadPoolExecutor.execute(new ClientProcessor(server.accept(), 2, TimeUnit.SECONDS));
             }
 
         } catch (SocketException e) {
-            System.out.println("ok, I will close server");
+            System.out.println(e);
 
         } catch (IOException e) {
             e.printStackTrace();
 
         } finally {
-            executor.shutdown();
-            System.out.println("Server has closed");
+            threadPoolExecutor.shutdown();
         }
 
     }

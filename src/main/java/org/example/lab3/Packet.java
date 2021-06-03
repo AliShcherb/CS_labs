@@ -1,15 +1,17 @@
-package org.example.lab2;
-import static org.example.lab2.CRC16.calculateCRC;
-import static org.example.lab2.Network.MESSAGE_LENGTH;
+package org.example.lab3;
 
+import lombok.Data;
+import lombok.SneakyThrows;
+import org.example.lab3.Decryption;
+import org.example.lab3.Encryption;
+
+import static org.example.lab3.CRC16.calculateCRC;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
 
-import lombok.Data;
-import lombok.SneakyThrows;
-import org.example.lab1.Decryption;
-import org.example.lab1.Encryption;
+
+import static org.example.lab2.Network.MESSAGE_LENGTH;
 
 @Data
 public class Packet {

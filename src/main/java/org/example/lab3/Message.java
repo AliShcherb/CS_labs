@@ -1,11 +1,10 @@
-package org.example.lab2;
+package org.example.lab3;
 
 
+import lombok.Data;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-
-import lombok.Data;
 
 @Data
 public class Message {

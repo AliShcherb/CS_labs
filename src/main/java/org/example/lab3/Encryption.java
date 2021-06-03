@@ -1,4 +1,4 @@
-package org.example.lab2;
+package org.example.lab3;
 
 import org.apache.commons.codec.binary.Hex;
 

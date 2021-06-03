@@ -29,14 +29,8 @@ public class UDPResponder implements Runnable {
             pacToBeProcessed = Packet.fromBytes(dp.getData());
 
             if(StoreServerUDP.packetCanBeProcessed(pacToBeProcessed.getBMsq().getBUserId(), pacToBeProcessed.getBPktId())) {
-                try {
-                    //  System.out.println("In process");
-                    answerPac = Processor.process(pacToBeProcessed);
-                } catch (BadPaddingException e) {
-                    e.printStackTrace();
-                } catch (IllegalBlockSizeException e) {
-                    e.printStackTrace();
-                }
+                //  System.out.println("In process");
+                answerPac = Processor.process(pacToBeProcessed);
 
                 try {
                     ds = new DatagramSocket();
@@ -56,7 +50,7 @@ public class UDPResponder implements Runnable {
 
 
                 answerPac = new Packet(pacToBeProcessed.getBSrc(), pacToBeProcessed.getBPktId(),
-                        new Message(Message.cTypes.EXCEPTION_FROM_SERVER, 0, "This packet has been processed yet!"));
+                        new Message(Message.cTypes.EXCEPTIONS, 0, "This packet has been processed yet!"));
 
                 try {
                     ds = new DatagramSocket();
