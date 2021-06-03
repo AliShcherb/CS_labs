@@ -11,6 +11,9 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.concurrent.Semaphore;
 
+import static org.example.lab2.Packet.CRC16_LENGTH;
+import static org.example.lab2.Packet.HEADER_LENGTH;
+
 
 public class Network {
 

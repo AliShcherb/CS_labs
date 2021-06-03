@@ -46,6 +46,10 @@ public class ClientProcessor implements Runnable {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (BadPaddingException e) {
+            e.printStackTrace();
+        } catch (IllegalBlockSizeException e) {
+            e.printStackTrace();
         } finally {
             shutdown();
         }
@@ -66,7 +70,11 @@ public class ClientProcessor implements Runnable {
                         System.out.println(e);
                     }
 
-                    network.send(answerPacket.toBytes());
+                    try {
+                        network.send(answerPacket.toBytes());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }), threadPoolExecutor)
 
                 .exceptionally(ex -> {

@@ -5,13 +5,13 @@ import lombok.SneakyThrows;
 import org.example.lab3.Decryption;
 import org.example.lab3.Encryption;
 
+import static org.example.lab2.Packet.CRC16_LENGTH;
+import static org.example.lab2.Packet.HEADER_LENGTH;
 import static org.example.lab3.CRC16.calculateCRC;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
 
-
-import static org.example.lab2.Network.MESSAGE_LENGTH;
 
 @Data
 public class Packet {
@@ -19,7 +19,7 @@ public class Packet {
     public final static Integer HEADER_LENGTH = 16;
     public final static Integer CRC16_LENGTH = 2;
 
-
+    public final static Integer MESSAGE_LENGTH = HEADER_LENGTH - CRC16_LENGTH;
     public Message bMsq;
     public final byte bSrc;
     public final long bPktId;

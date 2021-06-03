@@ -3,6 +3,9 @@ package org.example.test_lab_2;
 import org.example.lab2.*;
 import org.junit.jupiter.api.Test;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 
@@ -108,7 +111,7 @@ public class MainTest {
     }
 
     @Test
-    void invalidMByte() throws IOException,  TimeoutException {
+    void invalidMByte() throws IOException, TimeoutException, BadPaddingException, IllegalBlockSizeException {
         int port = 230;
         Server server = null;
         try {

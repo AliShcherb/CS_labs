@@ -98,7 +98,7 @@ public class UDPTest {
         Thread.sleep(6000);                              //wait for ClientMapCleaner
         StoreClientUDP sc1 = new StoreClientUDP(port, pac1);
 
-        assertEquals("test packet 1 ADD_PRODUCT!", sc1.getAnswerPacket().getBMsq().getPayload());
+        assertEquals("test packet 1 OK!", sc1.getAnswerPacket().getBMsq().getPayload());
 
         ss.join();
 
@@ -156,7 +156,7 @@ public class UDPTest {
         //start server after sending a packet
         StoreServerUDP ss = new StoreServerUDP(port);
 
-        assertEquals("test ADD_PRODUCT!", sc0.getAnswerPacket().getBMsq().getPayload());
+        assertEquals("test OK!", sc0.getAnswerPacket().getBMsq().getPayload());
 
         ss.join();
 

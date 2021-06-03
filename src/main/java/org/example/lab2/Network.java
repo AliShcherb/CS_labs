@@ -15,13 +15,16 @@ import java.util.concurrent.TimeoutException;
 
 import org.example.lab1.Decryption;
 
+import static org.example.lab2.Packet.CRC16_LENGTH;
+import static org.example.lab2.Packet.HEADER_LENGTH;
+
 public class Network {
 
     private BufferedOutputStream outputStream;
     private InputStream          inputStream;
     private int          maxTimeout;
     private TimeUnit     timeUnit;
-
+    public final static Integer MESSAGE_LENGTH = HEADER_LENGTH - CRC16_LENGTH;
     private ArrayList<Byte>     receivedBytes = new ArrayList<>(Packet.HEADER_LENGTH * 3);
     private LinkedList<Integer> bMagicIndexes = new LinkedList<>();
 
@@ -113,7 +116,7 @@ public class Network {
                     final short wCrc16_1=buffer.getShort();
 
                     final short crc1Evaluated =
-                            CRC16.evaluateCrc(toPrimitiveByteArr(receivedBytes.toArray(new Byte[0])), 0, 14);
+                            CRC16.calculateCRC(toPrimitiveByteArr(receivedBytes.toArray(new Byte[0])), 0, 14);
 
                     if (wCrc16_1 == crc1Evaluated) {
                         ByteBuffer buffer1 = (ByteBuffer) ByteBuffer.allocate(4).put(receivedBytes.get(10)).put(receivedBytes.get(11))
@@ -122,7 +125,7 @@ public class Network {
                     } else {
 //                      System.out.println("header reset");
                         resetToFirstBMagic();
-                        Packet ansPac = new Packet((byte) 0, 1, new Message(Message.cTypes.EXCEPTION_FROM_SERVER,0, "Corrupted header!"));
+                        Packet ansPac = new Packet((byte) 0, 1, new Message(Message.cTypes.EXCEPTIONS,0, "Corrupted header!"));
 //                        return ansPac.toPacket();
                         send(ansPac.toBytes());
                     }
