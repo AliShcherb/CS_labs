@@ -37,34 +37,33 @@ public class StoreServerTCP extends Thread {
 
     @Override
     public void run() {
+        System.out.println("Server running on port: " + port);
 
-        try {
-            System.out.println("Server running on port: " + port);
-
-            while (true) {
-                connectionPool.execute(new ClientHandler(server.accept(), processPool, clientTimeout));
-            }
-
-        } catch (SocketException e) {
-            System.out.println("ok, I will close server");
-
-        } catch (IOException e) {
-            e.printStackTrace();
-
-        } finally {
-            connectionPool.shutdown();
-            processPool.shutdown();
-            System.out.println("Server has closed");
+        for(int i = 0; i < connectionPool.getMaximumPoolSize(); i++) {
+            // connection pool is used to receive the client request only
+            connectionPool.execute(() -> {
+                while(true) {
+                    try {
+                        ClientHandler clientHandler = new ClientHandler(server.accept(), processPool, clientTimeout);
+                        // handle the client request in a separate thread pool
+                        processPool.execute(clientHandler);
+                    } catch (SocketException e) {
+                        break;
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
         }
-
     }
 
     public void shutdown() {
         try {
             server.close();
+            connectionPool.shutdownNow();
+            processPool.shutdownNow();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
 }

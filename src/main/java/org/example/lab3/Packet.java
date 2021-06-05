@@ -24,6 +24,7 @@ public class Packet {
     public Packet(Byte bSrc, long bPktId, Message bMsq) {
         this.bSrc = bSrc;
         this.bPktId = bPktId;
+        this.cType = Message.cTypes.values()[bMsq.getCType()];
         this.bMsq = bMsq;
         wLen = bMsq.toBytes().length;
     }
@@ -67,6 +68,7 @@ public class Packet {
         ByteBuffer messageBuffer = ByteBuffer.wrap(decryptedBytes)
                 .order(ByteOrder.BIG_ENDIAN);
 
+        int cTypeId = messageBuffer.getInt();
         int bUserId = messageBuffer.getInt();
         byte[] messageBody = new byte[mLength - 8];
         messageBuffer.get(messageBody);
@@ -74,7 +76,7 @@ public class Packet {
 
         Message message = new Message(cType, bUserId, new String(messageBody));
 
-        message.setCType(buffer.getInt());
+        message.setCType(cTypeId);
         short crcMessage = buffer.getShort();
         if (calculateCRC(message.toBytes()) != crcMessage) {
             throw new IllegalArgumentException("Message CRC16");

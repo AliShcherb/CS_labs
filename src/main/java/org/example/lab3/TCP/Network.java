@@ -1,5 +1,6 @@
 package org.example.lab3.TCP;
 
+import org.example.lab1.Decryption;
 import org.example.lab3.*;
 
 import java.io.IOException;
@@ -8,6 +9,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.concurrent.Semaphore;
 
@@ -56,25 +58,25 @@ public class Network {
 
             byte[] packetBytes;
 
-            int noNewData = 0;
+            long startingTime = System.currentTimeMillis();
 
             while (true) {
                 if (inputStream.available() == 0) {
-                    if (noNewData == maxTimeout/100) {
+                    long elapsedTime = System.currentTimeMillis() - startingTime;
+                    if (elapsedTime > maxTimeout) {
                         return null;
                     }
-                    ++noNewData;
 
                     try {
                         Thread.sleep(100);
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        // task interrupted
+                        return null;
                     }
                     continue;
                 }
 
                 inputStream.read(oneByte);
-                noNewData = 0;
 
                 if (Packet.B_MAGIC.equals(oneByte[0]) && receivedBytes.size() > 0) {
                     bMagicIndexes.add(receivedBytes.size());
@@ -89,8 +91,12 @@ public class Network {
                     final short wCrc16_2= buffer.getShort();
 
                     packetBytes = toPrimitiveByteArr(receivedBytes.toArray(new Byte[0]));
-                    final short crc2Evaluated =
-                            CRC16.evaluateCrc(packetBytes, Packet.HEADER_LENGTH, receivedBytes.size() - 2);
+
+                    byte[] decryptedBytes = Decryption.decrypt(
+                            Arrays.copyOfRange(packetBytes, Packet.HEADER_LENGTH, receivedBytes.size() - 2)
+                    );
+
+                    final short crc2Evaluated = CRC16.calculateCRC(decryptedBytes);
 
                     if (wCrc16_2 == crc2Evaluated) {
                         receivedBytes.clear();
@@ -136,6 +142,8 @@ public class Network {
             e.printStackTrace();
         }
         outputStream.write(msg);
+
+        outputStream.flush();
 
         outputStreamLock.release();
     }

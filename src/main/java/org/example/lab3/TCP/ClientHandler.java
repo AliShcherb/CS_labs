@@ -42,7 +42,6 @@ public class ClientHandler implements Runnable {
             while (true) {
                 byte[] packetBytes = network.receive();
                 if (packetBytes == null) {
-                    System.out.println("client timeout");
                     break;
                 }
                 handlePacketBytes(Arrays.copyOf(packetBytes, packetBytes.length));
