@@ -32,7 +32,7 @@ public class StoreClientTCP extends Thread {
         while (true) {
             try {
                 Socket socket = new Socket("localhost", port);
-                network = new Network(socket, 60_000);
+                network = new Network(socket, 3000);
                 return;
             } catch (ConnectException e) {
                 if (attempt > 3) {

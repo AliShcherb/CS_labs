@@ -16,7 +16,7 @@ public class Main {
 
         StoreServerTCP server = null;
         try {
-            server = new StoreServerTCP(port, 40, 10, 50_000);
+            server = new StoreServerTCP(port, 40, 10, 5000);
         } catch (IOException e) {
             e.printStackTrace();
         }
