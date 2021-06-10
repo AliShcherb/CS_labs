@@ -1,11 +1,10 @@
 package org.example.lab3.TCP;
 
+import lombok.SneakyThrows;
 import org.example.lab3.*;
-import org.example.lab3.TCP.Exceptions.InactiveServerException;
-import org.example.lab3.TCP.Exceptions.ServerOverloadException;
+import org.example.lab3.TCP.Exceptions.InactiveException;
+import org.example.lab3.TCP.Exceptions.OverloadException;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.Socket;
@@ -18,7 +17,7 @@ public class StoreClientTCP extends Thread {
     private Network network;
     private Packet  packet;
 
-    private int connectionTimeoutUnit = 500;
+    private int timeoutStandart = 500;
 
 
     public StoreClientTCP(int port, Packet packet) {
@@ -26,26 +25,22 @@ public class StoreClientTCP extends Thread {
         this.packet = packet;
     }
 
-    private void connect() throws IOException {
-        int attempt = 0;
+    @SneakyThrows
+    private void connect()  {
+        int i = 0;
 
         while (true) {
             try {
                 Socket socket = new Socket("localhost", port);
-                network = new Network(socket, 3000);
+                network = new Network(socket, timeoutStandart*6);
                 return;
             } catch (ConnectException e) {
-                if (attempt > 3) {
-                    System.out.println(Thread.currentThread().getName() + " server is inactive");
-                    throw new InactiveServerException();
+                if (i > 3) {
+                    System.out.println("Inactive error");
+                    throw new InactiveException();
                 }
-
-                try {
-                    Thread.sleep(connectionTimeoutUnit + connectionTimeoutUnit * attempt);
-                } catch (InterruptedException ex) {
-                    ex.printStackTrace();
-                }
-                ++attempt;
+                    Thread.sleep(timeoutStandart + timeoutStandart * i);
+                ++i;
             }
         }
     }
@@ -54,37 +49,32 @@ public class StoreClientTCP extends Thread {
     public void run() {
         Thread.currentThread().setName("Client " + Thread.currentThread().getId() + ":");
 
-        System.out.println(Thread.currentThread().getName() + " start");
-
         try {
             int attempt = 0;
             while (true) {
 
-                if (attempt == 3) throw new ServerOverloadException();
+                if (attempt == 3) throw new OverloadException();
 
                 connect();
 
-                byte[] helloPacketBytes = network.receive();
-                if (helloPacketBytes == null) {
-                    System.out.println(Thread.currentThread().getName() + " server timeout");
+                byte[] received = network.receive();
+                if (received == null) {
                     ++attempt;
                     continue;
                 }
-                Packet helloPacket = Packet.fromBytes(helloPacketBytes);
-                System.out.println(Thread.currentThread().getName() + " answer from server: " +
-                        helloPacket.getBMsq().getPayload());
-
+                Packet answerPacket = Packet.fromBytes(received);
+                System.out.println("Answer for id(" + Thread.currentThread().getId() + "): " + answerPacket.getBMsq().getPayload());
 
                 network.send(packet.toBytes());
 
                 byte[] dataPacketBytes = network.receive();
                 if (dataPacketBytes == null) {
-                    System.out.println(Thread.currentThread().getName() + " server timeout");
+                    System.out.println("Server timeout for id("+Thread.currentThread().getId()+")");
                     ++attempt;
                     continue;
                 }
                 Packet dataPacket = Packet.fromBytes(dataPacketBytes);
-                System.out.println(Thread.currentThread().getName() + " answer from server: " +
+                System.out.println("Answer for id("+Thread.currentThread().getId() + "): " +
                         dataPacket.getBMsq().getPayload());
                 break;
             }
@@ -95,11 +85,7 @@ public class StoreClientTCP extends Thread {
             if (network != null) {
                 network.shutdown();
             }
-            System.out.println(Thread.currentThread().getName() + " end");
         }
     }
 
-    public void shutdown() {
-        //todo
-    }
 }

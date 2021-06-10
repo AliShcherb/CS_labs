@@ -2,7 +2,6 @@ package org.example.lab3.TCP;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.net.Socket;
 import java.net.SocketException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -16,17 +15,8 @@ public class StoreServerTCP extends Thread {
     private ThreadPoolExecutor processPool;
     private int                clientTimeout;
 
-    /**
-     * @param port
-     * @param maxConnectionThreads max number of connected users
-     * @param maxProcessThreads    max number of heavy threads
-     * @param maxClientTimeout     the timeout must be > 0. A timeout of zero is interpreted as an infinite timeout.
-     * @throws IOException
-     */
     public StoreServerTCP(int port, int maxConnectionThreads, int maxProcessThreads, int maxClientTimeout)
             throws IOException {
-        super("Server");
-        if (maxClientTimeout < 0) throw new IllegalArgumentException("timeout can't be negative");
         this.port = port;
         connectionPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxConnectionThreads);
         processPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxProcessThreads);
@@ -37,16 +27,14 @@ public class StoreServerTCP extends Thread {
 
     @Override
     public void run() {
-        System.out.println("Server running on port: " + port);
-
-        for(int i = 0; i < connectionPool.getMaximumPoolSize(); i++) {
-            // connection pool is used to receive the client request only
+        System.out.println("Port: " + port);
+        int i = 0;
+        while (i < connectionPool.getMaximumPoolSize()){
             connectionPool.execute(() -> {
                 while(true) {
                     try {
-                        ClientHandler clientHandler = new ClientHandler(server.accept(), processPool, clientTimeout);
-                        // handle the client request in a separate thread pool
-                        processPool.execute(clientHandler);
+                        ClientProcessor clientProcessor = new ClientProcessor(server.accept(), processPool, clientTimeout);
+                        processPool.execute(clientProcessor);
                     } catch (SocketException e) {
                         break;
                     } catch (IOException e) {
@@ -54,17 +42,14 @@ public class StoreServerTCP extends Thread {
                     }
                 }
             });
+            i++;
         }
     }
 
-    public void shutdown() {
-        try {
+    public void shutdown() throws IOException {
             server.close();
             connectionPool.shutdownNow();
             processPool.shutdownNow();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
 }

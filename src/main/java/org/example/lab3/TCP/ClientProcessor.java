@@ -2,42 +2,35 @@ package org.example.lab3.TCP;
 
 import org.example.lab3.*;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
 import java.io.IOException;
 import java.net.Socket;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class ClientHandler implements Runnable {
+import static java.util.concurrent.CompletableFuture.*;
+
+public class ClientProcessor implements Runnable {
 
     private Network network;
 
-    private ThreadPoolExecutor executor;
+    private final ThreadPoolExecutor threadPoolExecutor;
+    public final static Integer SUPER_ZERO = 0;
+    private int timeoutStandart = 500;
+    private AtomicInteger atomicInteger = new AtomicInteger(SUPER_ZERO);
 
-    private AtomicInteger processingAmount = new AtomicInteger(0);
-
-    public ClientHandler(Socket clientSocket, ThreadPoolExecutor executor, int maxTimeout) throws IOException {
+    public ClientProcessor(Socket clientSocket, ThreadPoolExecutor executor, int maxTimeout) throws IOException {
         network = new Network(clientSocket, maxTimeout);
-        this.executor = executor;
-    }
-    public long bytesToLong(byte[] bytes) {
-        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
-        buffer.put(bytes);
-        buffer.flip();//need flip
-        return buffer.getLong();
+        this.threadPoolExecutor = executor;
     }
 
     @Override
     public void run() {
-        Thread.currentThread().setName(Thread.currentThread().getName() + " - ClientHandler");
         try {
-            Packet helloPacket = null;
-            helloPacket = new Packet((byte) 0, 0,
-                    new Message(Message.cTypes.STANDART_ANSWER, 0, "connection established"));
-            network.send(helloPacket.toBytes());
+
+            Packet answerPacket = new Packet((byte) 0, SUPER_ZERO,
+                    new Message(Message.cTypes.STANDART_ANSWER, SUPER_ZERO, "Сonnected"));
+            network.send(answerPacket.toBytes());
 
             while (true) {
                 byte[] packetBytes = network.receive();
@@ -55,14 +48,13 @@ public class ClientHandler implements Runnable {
     }
 
     private void handlePacketBytes(byte[] packetBytes) {
-        processingAmount.incrementAndGet();
+        atomicInteger.incrementAndGet();
 
-        CompletableFuture.supplyAsync(() -> {
-            //to encode in parallel thread todo non synchronized decryption
+        supplyAsync(() -> {
             Packet packet = null;
             packet = Packet.fromBytes(packetBytes);
             return packet;
-        }, executor)
+        }, threadPoolExecutor)
 
                 .thenAcceptAsync((inputPacket -> {
                     Packet answerPacket = null;
@@ -79,22 +71,22 @@ public class ClientHandler implements Runnable {
                         e.printStackTrace();
                     }
 
-                    processingAmount.decrementAndGet();
+                    atomicInteger.decrementAndGet();
 
-                }), executor)
+                }), threadPoolExecutor)
 
                 .exceptionally(ex -> {
                     ex.printStackTrace();
-                    processingAmount.decrementAndGet();
+                    atomicInteger.decrementAndGet();
                     return null;
                 });
     }
 
 
     public void shutdown() {
-        while (processingAmount.get() > 0) {
+        while (atomicInteger.get() > SUPER_ZERO) {
             try {
-                Thread.sleep(5000);
+                Thread.sleep(timeoutStandart*10);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
