@@ -22,7 +22,7 @@ public class DB {
     public static void close() {
         try{
             connection.close();
-            System.out.println("Connection to SQLite has been established.\n");
+            System.out.println("Connection to SQLite has been closed.\n");
 
         } catch (SQLException throwables) {
             System.out.println(throwables.getMessage());
